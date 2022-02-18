@@ -84,112 +84,9 @@ export default function CRUD() {
     });
   }
 
-  const postClickHandler = (evt) => {
-    if (evt.target.tagName === "BUTTON") {
-      evt.preventDefault()
-    }
-    setId(evt.target.id);
-  }
-
   const deletePostHandler = (id) => {
     fetchDelete(id);
     setRedirect(!redirect)
-  }
-
-
-  const editPostHandler = (userInfo) => {
-    console.log(userInfo, content)
-    userInfo.content = content;
-    const url = 'http://localhost:7777/posts';
-    fetchPost(url, userInfo)
-    setRedirect(true)
-  }
-
-
-  function Posts({ posts }) {
-
-    return (
-      <>
-        <div className="posts">
-          {posts.map(post => <Post userInfo={post} link />)}
-
-          <Link className="button" to="/posts/new">Создать пост</Link>
-        </div>
-      </>
-    )
-  }
-  function Post({ userInfo, link }) {
-    function PostItem() {
-      return (
-        <div className="posts__item" id={userInfo.id}>
-          <div>Почтальон Печкин</div>
-
-          <img src="https://chto-takoe-lyubov.net/wp-content/uploads/2019/11/Pochtalon-Pechkin-zagadki.jpg" alt="" width="80" height="80" />
-          <div>{userInfo.content}</div>
-          {/* <Link to={`/posts/${userInfo.id}/edit`} onClick={() => editPostHandler(userInfo)}>Редактировать</Link> */}
-
-
-          <Link
-            to={`/posts/${userInfo.id}/edit`}
-            state={userInfo}
-          >
-            Редактировать
-          </Link>
-
-          <button onClick={() => deletePostHandler(userInfo.id)}>Удалить</button>
-
-        </div>
-      )
-    }
-
-    if (userInfo) {
-
-      if (link) {
-        return (
-          <Link to={`/posts/${userInfo.id}`} onClick={postClickHandler}>
-            <PostItem />
-          </Link>
-        )
-      } else {
-        return (
-          <PostItem />
-        )
-      }
-
-
-    } else {
-      return (<></>)
-    }
-  }
-  function PostEdit(props) {
-    const location = useLocation()
-    const userInfo = location.state;
-    // console.log(userInfo.id)
-
-    // setContent(userInfo.content)
-    return (
-      <form className="posts__edit">
-        <h2>Редактировать пост</h2>
-        <textarea name="textarea" id="textarea" key="fffff" onChange={(evt) => setContent(evt.target.value)}></textarea>
-        {/* <input onClick={() => editPostHandler(userInfo)} value="Опубликовать" type="submit" /> */}
-        <Link to='/' onClick={() => editPostHandler(userInfo)}>Опубликовать</Link>
-        <Link to={`/posts/${userInfo.id}/`}>X</Link>
-      </form>
-
-
-    )
-  }
-
-
-  function CreatePost() {
-    return (
-      <form className="posts__create">
-        <h2>Создать пост</h2>
-        <textarea onChange={evt => setContent(evt.target.value)} value={content} ></textarea>
-        <input onClick={createPostHandle} value="Опубликовать" type="submit" />
-        <Link to="/">X</Link>
-      </form>
-    )
   }
 
   const getChosenPost = (id) => {
@@ -209,12 +106,12 @@ export default function CRUD() {
     <>
       <Router>
         <Routes>
-          <Route path="/posts/:id/edit" element={redirect ? <Navigate replace to="/" /> : <PostEdit />} />
-          <Route path="/posts/:id" element={redirect ? <Navigate replace to="/" /> : <Post userInfo={chosenPost[0]} />} />
-          <Route path="/posts/new" element={redirect ? <Navigate replace to="/" /> : <CreatePost />}>
+          <Route path="/posts/:id/edit" element={redirect ? <Navigate replace to="/" /> : <PostEdit fetchPost={fetchPost} setRedirect={setRedirect} />} />
+          <Route path="/posts/:id" element={redirect ? <Navigate replace to="/" /> : <PostItem deletePostHandler={deletePostHandler} />} />
+          <Route path="/posts/new" element={redirect ? <Navigate replace to="/" /> : <CreatePost content={content} setContent={setContent} createPostHandle={createPostHandle} />}>
 
           </Route>
-          <Route path="/" element={<Posts posts={users} />}>
+          <Route path="/" element={<Posts posts={users} deletePostHandler={deletePostHandler} />}>
           </Route>
 
         </Routes>
@@ -226,3 +123,126 @@ export default function CRUD() {
 
 }
 
+
+function Posts({ posts, deletePostHandler }) {
+
+  return (
+    <>
+      <div className="posts">
+        {posts.map(post => <Post userInfo={post} deletePostHandler={deletePostHandler} link />)}
+
+        <Link className="button" to="/posts/new">Создать пост</Link>
+      </div>
+    </>
+  )
+}
+function Post({ userInfo, link, deletePostHandler, }) {
+  console.log('ddsf')
+
+  const postClickHandler = (evt) => {
+    console.log(userInfo)
+    if (evt.target.tagName === "BUTTON") {
+      evt.preventDefault()
+    }
+    // setId(evt.target.id);
+  }
+
+  if (userInfo) {
+    if (link) {
+      console.log('g')
+      return (
+        // <Link to={`/posts/${userInfo.id}`} onClick={postClickHandler}>
+        //   <PostItem userInfo={userInfo} deletePostHandler={deletePostHandler} />
+        // </Link>
+        <Link to={`/posts/${userInfo.id}`} state={{
+          userInfo: userInfo,
+        }
+        }>
+          <PostItem userInfo={userInfo} deletePostHandler={deletePostHandler} />
+        </Link>
+      )
+    } else {
+      return (
+        <PostItem userInfo={userInfo} deletePostHandler={deletePostHandler} />
+      )
+    }
+
+
+  } else {
+    return (<></>)
+  }
+  // return (
+  //   <Link to={`/posts/${userInfo.id}`} onClick={postClickHandler}>
+  //     <PostItem userInfo={userInfo} deletePostHandler={deletePostHandler} />
+  //   </Link>
+  // )
+}
+
+function PostItem({ userInfo, deletePostHandler }) {
+  const location = useLocation()
+  const userInfoState = location.state;
+
+  if (!userInfo) {
+    userInfo = userInfoState.userInfo;
+  }
+
+  console.log(userInfo)
+  return (
+    <div className="posts__item" id={userInfo.id}>
+      <div>Почтальон Печкин</div>
+
+      <img src="https://chto-takoe-lyubov.net/wp-content/uploads/2019/11/Pochtalon-Pechkin-zagadki.jpg" alt="" width="80" height="80" />
+      <div>{userInfo.content}</div>
+
+      <Link to={`/posts/${userInfo.id}/edit`} state={{
+        userInfo: userInfo,
+      }}>
+        Редактировать
+      </Link>
+
+      <button onClick={() => deletePostHandler(userInfo.id)}>Удалить</button>
+
+    </div>
+  )
+}
+
+
+function PostEdit({ fetchPost, setRedirect }) {
+  const [content, setContent] = useState();
+  const location = useLocation()
+  const userInfo = location.state;
+  console.log(userInfo);
+
+
+  const editPostHandler = ({ userInfo }) => {
+    console.log('edit post')
+    userInfo.content = content;
+    console.log(userInfo);
+    const url = 'http://localhost:7777/posts';
+    fetchPost(url, userInfo)
+    setRedirect(true)
+  }
+
+
+  return (
+    <form className="posts__edit">
+      <h2>Редактировать пост</h2>
+      <textarea name="textarea" id="textarea" key="fffff" onChange={(evt) => setContent(evt.target.value)}></textarea>
+      {/* <input onClick={() => editPostHandler(userInfo)} value="Опубликовать" type="submit" /> */}
+      <Link to='/' onClick={() => editPostHandler(userInfo)}>Опубликовать</Link>
+      <Link to={`/posts/${userInfo.id}/`}>X</Link>
+    </form>
+  )
+}
+
+
+function CreatePost({ setContent, content, createPostHandle }) {
+  return (
+    <form className="posts__create">
+      <h2>Создать пост</h2>
+      <textarea onChange={evt => setContent(evt.target.value)} value={content} ></textarea>
+      <input onClick={createPostHandle} value="Опубликовать" type="submit" />
+      <Link to="/">X</Link>
+    </form>
+  )
+}
